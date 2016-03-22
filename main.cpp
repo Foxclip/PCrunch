@@ -22,6 +22,7 @@ SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 LTexture* gTexture = NULL;
 TTF_Font* gFont = NULL;
+LButton* gButtons[TOTAL_BUTTONS];
 
 int main(int argc, char* args[]) {
 	if(!init()) {

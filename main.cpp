@@ -5,6 +5,7 @@
 #include <string>
 #include <algorithm>
 #include "ltexture.h"
+#include "lbutton.h"
 
 bool init();
 bool loadMedia();

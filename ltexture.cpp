@@ -1,5 +1,6 @@
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <string>
 #include "ltexture.h"
 
@@ -9,12 +10,12 @@ LTexture::LTexture() {
 	mHeight = 0;
 }
 
-LTexture::LTexture(SDL_Renderer** renderer) {
+LTexture::LTexture(SDL_Renderer** renderer) : LTexture() {
 	mRenderer = renderer;
 }
 
 #ifdef _SDL_TTF_H
-LTexture::LTexture(SDL_Renderer** renderer, TTF_Font** font) {
+LTexture::LTexture(SDL_Renderer** renderer, TTF_Font** font): LTexture() {
 	mRenderer = renderer;
 	mFont = font;
 }

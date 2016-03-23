@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include "ltexture.h"
+#include "ltimer.h"
 
 bool init();
 bool loadMedia();
@@ -21,10 +22,11 @@ bool gQuit = false;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font* gFont;
-LTexture* gPromptTextTexture;
+LTexture* gStartPromptTextTexture;
+LTexture* gPausePromptTextTexture;
 LTexture* gTimeTextTexture;
-Uint32 startTime = 0;
 std::stringstream timeText;
+LTimer timer;
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -72,9 +74,14 @@ bool loadMedia() {
 		return false;
 	}
 	SDL_Color textColor = { 0, 0, 0, 255 };
-	gPromptTextTexture = new LTexture(&gRenderer, &gFont);
+	gStartPromptTextTexture = new LTexture(&gRenderer, &gFont);
+	gPausePromptTextTexture = new LTexture(&gRenderer, &gFont);
 	gTimeTextTexture = new LTexture(&gRenderer, &gFont);
-	if(!gPromptTextTexture->loadFromRenderedText("Press Enter to Reset Start Time", textColor)) {
+	if(!gStartPromptTextTexture->loadFromRenderedText("Press S to Start or Stop the Timer", textColor)) {
+		printf("Font rendering error\n");
+		return false;
+	}
+	if(!gPausePromptTextTexture->loadFromRenderedText("Press P to Pause or Unpause the timer", textColor)) {
 		printf("Font rendering error\n");
 		return false;
 	}
@@ -83,9 +90,11 @@ bool loadMedia() {
 }
 
 void close() {
-	gPromptTextTexture->free();
+	gStartPromptTextTexture->free();
+	gPausePromptTextTexture->free();
 	gTimeTextTexture->free();
-	delete gPromptTextTexture;
+	delete gStartPromptTextTexture;
+	delete gPausePromptTextTexture;
 	delete gTimeTextTexture;
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
@@ -106,12 +115,13 @@ void mainLoop() {
 
 void render() {
 	timeText.str("");
-	timeText << "Milliseconds since start time " << SDL_GetTicks() - startTime;
+	timeText << "Seconds since start time " << timer.getTicks() / 1000.0;
 	if(!gTimeTextTexture->loadFromRenderedText(timeText.str().c_str(), { 0, 0, 0 }))
 		printf("Time text rendering error\n");
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	gPromptTextTexture->render((WIDTH - gPromptTextTexture->getWidth()) / 2, 0);
+	gStartPromptTextTexture->render((WIDTH - gStartPromptTextTexture->getWidth()) / 2, 0);
+	gPausePromptTextTexture->render((WIDTH - gPausePromptTextTexture->getWidth()) / 2, gStartPromptTextTexture->getHeight());
 	gTimeTextTexture->render((WIDTH - gTimeTextTexture->getWidth()) / 2, (HEIGHT - gTimeTextTexture->getHeight()) / 2);
 	SDL_RenderPresent(gRenderer);
 }
@@ -128,8 +138,11 @@ void handleEvents() {
 
 void handleKeyboard(SDL_Event e) {
 	switch(e.key.keysym.sym) {
-	case SDLK_RETURN:
-		startTime = SDL_GetTicks();
+	case SDLK_s:
+		timer.isStarted() ? timer.stop() : timer.start();
+		break;
+	case SDLK_p:
+		timer.isPaused() ? timer.unpause() : timer.pause();
 	default:
 		break;
 	}

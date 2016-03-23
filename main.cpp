@@ -1,11 +1,9 @@
 #include <SDL.h>
 #include <SDL_image.h>
-#include <SDL_ttf.h>
 #include <stdio.h>
 #include <string>
 #include <algorithm>
 #include "ltexture.h"
-#include "lbutton.h"
 
 bool init();
 bool loadMedia();
@@ -13,17 +11,15 @@ void close();
 void mainLoop();
 void render();
 void processInput();
-void processKeyboard(SDL_Event e);
+void processKeyboard();
 
 const int WIDTH = 640;
 const int HEIGHT = 480;
 bool gQuit = false;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
-TTF_Font* gFont = NULL;
-LButton* gButtons[TOTAL_BUTTONS];
-LTexture* gButtonSpriteSheetTexture;
-SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
+LTexture** currentTexture;
+LTexture *upTexture, *downTexture, *rightTexture, *leftTexture, *pressTexture;
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -57,52 +53,54 @@ bool init() {
 		printf("SDL image init error: %s\n", IMG_GetError());
 		return false;
 	}
-	if(TTF_Init() == -1) {
+	/*if(TTF_Init() == -1) {
 		printf("TTF init error: %s\n", TTF_GetError());
 		return false;
-	}
+	}*/
 	return true;
 }
 
 bool loadMedia() {
-	gFont = TTF_OpenFont("lazy.ttf", 28);
+	/*gFont = TTF_OpenFont("lazy.ttf", 28);
 	if(!gFont) {
 		printf("Font loading error: %s\n", TTF_GetError());
 		return false;
-	}
+	}*/
 	SDL_Color textColor = { 0, 0, 0 };
-	gButtonSpriteSheetTexture = new LTexture(&gRenderer);
-	if(!gButtonSpriteSheetTexture->loadFromFile("button.png"))
+	upTexture = new LTexture(&gRenderer);
+	if(!upTexture->loadFromFile("up.png"))
 		return false;
-
-	gSpriteClips[0] = { 0, 0, 300, 200 };
-	gSpriteClips[1] = { 0, 200, 300, 200 };
-	gSpriteClips[2] = { 0, 400, 300, 200 };
-	gSpriteClips[3] = { 0, 600, 300, 200 };
-
-	for(int i = 0; i < TOTAL_BUTTONS; i++)
-		gButtons[i] = new LButton();
-
-	gButtons[0]->setPosition(0, 0);
-	gButtons[1]->setPosition(WIDTH - 300, 0);
-	gButtons[2]->setPosition(0, HEIGHT - 200);
-	gButtons[3]->setPosition(WIDTH - 300, HEIGHT - 200);
+	downTexture = new LTexture(&gRenderer);
+	if(!downTexture->loadFromFile("down.png"))
+		return false;
+	leftTexture = new LTexture(&gRenderer);
+	if(!leftTexture->loadFromFile("left.png"))
+		return false;
+	rightTexture = new LTexture(&gRenderer);
+	if(!rightTexture->loadFromFile("right.png"))
+		return false;
+	pressTexture = new LTexture(&gRenderer);
+	if(!pressTexture->loadFromFile("press.png"))
+		return false;
 
 	return true;
 }
 
 void close() {
-	gButtonSpriteSheetTexture->free();
-	for(int i = 0; i < TOTAL_BUTTONS; i++)
-		delete gButtons[i];
-	delete gButtonSpriteSheetTexture;
-	TTF_CloseFont(gFont);
+	upTexture->free();
+	downTexture->free();
+	leftTexture->free();
+	rightTexture->free();
+	pressTexture->free();
+	delete upTexture;
+	delete downTexture;
+	delete leftTexture;
+	delete rightTexture;
+	delete pressTexture;
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
-	gFont = NULL;
 	gWindow = NULL;
 	gRenderer = NULL;
-	TTF_Quit();
 	IMG_Quit();
 	SDL_Quit();
 }
@@ -110,6 +108,7 @@ void close() {
 void mainLoop() {
 	while(!gQuit) {
 		processInput();
+		processKeyboard();
 		render();
 	}
 }
@@ -117,8 +116,7 @@ void mainLoop() {
 void render() {
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	for(int i = 0; i < TOTAL_BUTTONS; i++)
-		gButtons[i]->render();
+	(*currentTexture)->render(0, 0);
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -127,20 +125,19 @@ void processInput() {
 	while(SDL_PollEvent(&e) != 0) {
 		if(e.type == SDL_QUIT)
 			gQuit = true;
-		else if(e.type == SDL_KEYDOWN)
-			processKeyboard(e);
-		else
-			for(int i = 0; i < TOTAL_BUTTONS; i++)
-				gButtons[i]->handleEvent(&e);
 	}
 }
 
-void processKeyboard(SDL_Event e) {
-	switch(e.key.keysym.sym) {
-		case SDLK_ESCAPE:
-			gQuit = true;
-			break;
-		default:
-			break;
-	}
+void processKeyboard() {
+	const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+	if(currentKeyStates[SDL_SCANCODE_UP])
+		currentTexture = &upTexture;
+	else if(currentKeyStates[SDL_SCANCODE_DOWN])
+		currentTexture = &downTexture;
+	else if(currentKeyStates[SDL_SCANCODE_LEFT])
+		currentTexture = &leftTexture;
+	else if(currentKeyStates[SDL_SCANCODE_RIGHT])
+		currentTexture = &rightTexture;
+	else
+		currentTexture = &pressTexture;
 }

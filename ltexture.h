@@ -1,12 +1,14 @@
 #pragma once
 
-#include <SDL_ttf.h>
 #include <string>
 
 class LTexture {
 	public:
 		LTexture();
-		LTexture(SDL_Renderer** renderer, TTF_Font** font = NULL);
+		LTexture(SDL_Renderer** renderer);
+		#ifdef _SDL_TTF_H
+		LTexture(SDL_Renderer** renderer, TTF_Font** font);
+		#endif
 		~LTexture();
 		bool loadFromFile(std::string path);
 		#ifdef _SDL_TTF_H
@@ -22,7 +24,9 @@ class LTexture {
 
 	private:
 		SDL_Renderer** mRenderer;
+		#ifdef _SDL_TTF_H
 		TTF_Font** mFont;
+		#endif
 		SDL_Texture* mTexture;
 		int mWidth, mHeight;
 };

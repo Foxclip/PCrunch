@@ -22,11 +22,10 @@ bool gQuit = false;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font* gFont;
-LTexture* gStartPromptTextTexture;
-LTexture* gPausePromptTextTexture;
-LTexture* gTimeTextTexture;
+LTexture gFpsTextTexture;
 std::stringstream timeText;
-LTimer timer;
+LTimer fpsTimer;
+int countedFrames = 0;
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -74,28 +73,12 @@ bool loadMedia() {
 		return false;
 	}
 	SDL_Color textColor = { 0, 0, 0, 255 };
-	gStartPromptTextTexture = new LTexture(&gRenderer, &gFont);
-	gPausePromptTextTexture = new LTexture(&gRenderer, &gFont);
-	gTimeTextTexture = new LTexture(&gRenderer, &gFont);
-	if(!gStartPromptTextTexture->loadFromRenderedText("Press S to Start or Stop the Timer", textColor)) {
-		printf("Font rendering error\n");
-		return false;
-	}
-	if(!gPausePromptTextTexture->loadFromRenderedText("Press P to Pause or Unpause the timer", textColor)) {
-		printf("Font rendering error\n");
-		return false;
-	}
+	gFpsTextTexture = LTexture(&gRenderer, &gFont);
 
 	return true;
 }
 
 void close() {
-	gStartPromptTextTexture->free();
-	gPausePromptTextTexture->free();
-	gTimeTextTexture->free();
-	delete gStartPromptTextTexture;
-	delete gPausePromptTextTexture;
-	delete gTimeTextTexture;
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
 	gWindow = NULL;
@@ -107,6 +90,7 @@ void close() {
 }
 
 void mainLoop() {
+	fpsTimer.start();
 	while(!gQuit) {
 		handleEvents();
 		render();
@@ -114,16 +98,18 @@ void mainLoop() {
 }
 
 void render() {
+	float avgFps = countedFrames / (fpsTimer.getTicks() / 1000.f);
+	if(avgFps > 2000000)
+		avgFps = 0;
 	timeText.str("");
-	timeText << "Seconds since start time " << timer.getTicks() / 1000.0;
-	if(!gTimeTextTexture->loadFromRenderedText(timeText.str().c_str(), { 0, 0, 0 }))
-		printf("Time text rendering error\n");
+	timeText << "Average frames per second " << avgFps;
+	if(!gFpsTextTexture.loadFromRenderedText(timeText.str().c_str(), { 0, 0, 0 }))
+		printf("Text rendering error\n");
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	gStartPromptTextTexture->render((WIDTH - gStartPromptTextTexture->getWidth()) / 2, 0);
-	gPausePromptTextTexture->render((WIDTH - gPausePromptTextTexture->getWidth()) / 2, gStartPromptTextTexture->getHeight());
-	gTimeTextTexture->render((WIDTH - gTimeTextTexture->getWidth()) / 2, (HEIGHT - gTimeTextTexture->getHeight()) / 2);
+	gFpsTextTexture.render((WIDTH - gFpsTextTexture.getWidth()) / 2, (HEIGHT - gFpsTextTexture.getHeight()) / 2);
 	SDL_RenderPresent(gRenderer);
+	countedFrames++;
 }
 
 void handleEvents() {
@@ -137,13 +123,8 @@ void handleEvents() {
 }
 
 void handleKeyboard(SDL_Event e) {
-	switch(e.key.keysym.sym) {
-	case SDLK_s:
-		timer.isStarted() ? timer.stop() : timer.start();
-		break;
-	case SDLK_p:
-		timer.isPaused() ? timer.unpause() : timer.pause();
+	/*switch(e.key.keysym.sym) {
 	default:
 		break;
-	}
+	}*/
 }

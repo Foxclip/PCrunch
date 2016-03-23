@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ltexture.h"
+
 enum LButtonSprite {
 	BUTTON_SPRITE_MOUSE_OUT,
 	BUTTON_SPRITE_MOUSE_OVER_MOTION,
@@ -8,11 +10,11 @@ enum LButtonSprite {
 	BUTTON_SPRITE_TOTAL
 };
 
-LTexture* gButtonSpriteSheetTexture;
 const int BUTTON_WIDTH = 300;
 const int BUTTON_HEIGHT = 200;
 const int TOTAL_BUTTONS = 4;
-SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
+extern LTexture* gButtonSpriteSheetTexture;
+extern SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
 class LButton {
 	public:

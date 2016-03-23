@@ -39,6 +39,7 @@ bool LTexture::loadFromFile(std::string path) {
 	return true;
 }
 
+#ifdef _SDL_TTF_H
 bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor) {
 	free();
 	SDL_Surface* textSurface = TTF_RenderText_Solid(*mFont, textureText.c_str(), textColor);
@@ -57,6 +58,7 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 	SDL_FreeSurface(textSurface);
 	return true;
 }
+#endif //_SDL_TTF_H
 
 void LTexture::free() {
 	if(mTexture) {

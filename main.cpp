@@ -20,9 +20,10 @@ const int HEIGHT = 480;
 bool gQuit = false;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
-LTexture* gTexture = NULL;
 TTF_Font* gFont = NULL;
 LButton* gButtons[TOTAL_BUTTONS];
+LTexture* gButtonSpriteSheetTexture;
+SDL_Rect gSpriteClips[BUTTON_SPRITE_TOTAL];
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -70,15 +71,31 @@ bool loadMedia() {
 		return false;
 	}
 	SDL_Color textColor = { 0, 0, 0 };
-	gTexture = new LTexture(&gRenderer, &gFont);
-	if(!gTexture->loadFromRenderedText("The quick brown fox jumps over the lazy dog", textColor))
+	gButtonSpriteSheetTexture = new LTexture(&gRenderer);
+	if(!gButtonSpriteSheetTexture->loadFromFile("button.png"))
 		return false;
+
+	gSpriteClips[0] = { 0, 0, 300, 200 };
+	gSpriteClips[1] = { 0, 200, 300, 200 };
+	gSpriteClips[2] = { 0, 400, 300, 200 };
+	gSpriteClips[3] = { 0, 600, 300, 200 };
+
+	for(int i = 0; i < TOTAL_BUTTONS; i++)
+		gButtons[i] = new LButton();
+
+	gButtons[0]->setPosition(0, 0);
+	gButtons[1]->setPosition(WIDTH - 300, 0);
+	gButtons[2]->setPosition(0, HEIGHT - 200);
+	gButtons[3]->setPosition(WIDTH - 300, HEIGHT - 200);
+
 	return true;
 }
 
 void close() {
-	gTexture->free();
-	delete gTexture;
+	gButtonSpriteSheetTexture->free();
+	for(int i = 0; i < TOTAL_BUTTONS; i++)
+		delete gButtons[i];
+	delete gButtonSpriteSheetTexture;
 	TTF_CloseFont(gFont);
 	SDL_DestroyRenderer(gRenderer);
 	SDL_DestroyWindow(gWindow);
@@ -100,7 +117,8 @@ void mainLoop() {
 void render() {
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	gTexture->render((WIDTH - gTexture->getWidth()) / 2, (HEIGHT - gTexture->getHeight()) / 2);
+	for(int i = 0; i < TOTAL_BUTTONS; i++)
+		gButtons[i]->render();
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -109,8 +127,11 @@ void processInput() {
 	while(SDL_PollEvent(&e) != 0) {
 		if(e.type == SDL_QUIT)
 			gQuit = true;
-		if(e.type == SDL_KEYDOWN)
+		else if(e.type == SDL_KEYDOWN)
 			processKeyboard(e);
+		else
+			for(int i = 0; i < TOTAL_BUTTONS; i++)
+				gButtons[i]->handleEvent(&e);
 	}
 }
 

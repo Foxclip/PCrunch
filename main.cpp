@@ -7,6 +7,8 @@
 #include <sstream>
 #include "ltexture.h"
 #include "ltimer.h"
+#include "globals.h"
+#include "dot.h"
 
 bool init();
 bool loadMedia();
@@ -15,17 +17,14 @@ void mainLoop();
 void render();
 void handleEvents();
 void handleKeyboard(SDL_Event e);
+void processPhysics();
 
-const int WIDTH = 640;
-const int HEIGHT = 480;
 bool gQuit = false;
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font* gFont;
-LTexture gFpsTextTexture;
-std::stringstream timeText;
-LTimer fpsTimer;
-int countedFrames = 0;
+LTexture gDotTexture;
+Dot dot;
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -44,7 +43,7 @@ bool init() {
 		printf("Init error: %s\n", SDL_GetError());
 		return false;
 	}
-	gWindow = SDL_CreateWindow("Title", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("Title", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if(gWindow == NULL) {
 		printf("Window creation error: %s\n", SDL_GetError());
 		return false;
@@ -72,9 +71,8 @@ bool loadMedia() {
 		printf("Font loading error: %s\n", TTF_GetError());
 		return false;
 	}
-	SDL_Color textColor = { 0, 0, 0, 255 };
-	gFpsTextTexture = LTexture(&gRenderer, &gFont);
-
+	gDotTexture = LTexture(&gRenderer);
+	gDotTexture.loadFromFile("dot.bmp");
 	return true;
 }
 
@@ -90,26 +88,18 @@ void close() {
 }
 
 void mainLoop() {
-	fpsTimer.start();
 	while(!gQuit) {
 		handleEvents();
+		processPhysics();
 		render();
 	}
 }
 
 void render() {
-	float avgFps = countedFrames / (fpsTimer.getTicks() / 1000.f);
-	if(avgFps > 2000000)
-		avgFps = 0;
-	timeText.str("");
-	timeText << "Average frames per second " << avgFps;
-	if(!gFpsTextTexture.loadFromRenderedText(timeText.str().c_str(), { 0, 0, 0 }))
-		printf("Text rendering error\n");
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	gFpsTextTexture.render((WIDTH - gFpsTextTexture.getWidth()) / 2, (HEIGHT - gFpsTextTexture.getHeight()) / 2);
+	dot.render();
 	SDL_RenderPresent(gRenderer);
-	countedFrames++;
 }
 
 void handleEvents() {
@@ -119,6 +109,7 @@ void handleEvents() {
 			gQuit = true;
 		else if(e.type == SDL_KEYDOWN)
 			handleKeyboard(e);
+		
 	}
 }
 
@@ -127,4 +118,9 @@ void handleKeyboard(SDL_Event e) {
 	default:
 		break;
 	}*/
+	dot.handleEvent(e);
+}
+
+void processPhysics() {
+	dot.move();
 }

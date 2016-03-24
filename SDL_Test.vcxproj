@@ -119,11 +119,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="dot.cpp" />
     <ClCompile Include="ltexture.cpp" />
     <ClCompile Include="ltimer.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dot.h" />
+    <ClInclude Include="globals.h" />
     <ClInclude Include="ltexture.h" />
     <ClInclude Include="ltimer.h" />
   </ItemGroup>

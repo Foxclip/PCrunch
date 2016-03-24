@@ -5,9 +5,9 @@
 #include <string>
 #include <algorithm>
 #include <sstream>
+#include "lwindow.h"
 #include "ltexture.h"
 #include "globals.h"
-#include "dot.h"
 
 bool init();
 bool loadMedia();
@@ -19,11 +19,10 @@ void handleKeyboard(SDL_Event e);
 void processPhysics();
 
 bool gQuit = false;
-SDL_Window* gWindow = NULL;
+LWindow gWindow;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font* gFont;
-LTexture gDotTexture;
-Dot dot;
+LTexture gSceneTexture;
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -42,12 +41,11 @@ bool init() {
 		printf("Init error: %s\n", SDL_GetError());
 		return false;
 	}
-	gWindow = SDL_CreateWindow("Title", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-	if(gWindow == NULL) {
+	if(!gWindow.init()) {
 		printf("Window creation error: %s\n", SDL_GetError());
 		return false;
 	}
-	gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	gRenderer = gWindow.createRenderer();
 	if(gRenderer == NULL) {
 		printf("Renderer creation error: %s\n", SDL_GetError());
 		return false;
@@ -70,15 +68,14 @@ bool loadMedia() {
 		printf("Font loading error: %s\n", TTF_GetError());
 		return false;
 	}
-	gDotTexture = LTexture(&gRenderer);
-	gDotTexture.loadFromFile("dot.bmp");
+	gSceneTexture = LTexture(&gRenderer);
+	gSceneTexture.loadFromFile("window.png");
 	return true;
 }
 
 void close() {
 	SDL_DestroyRenderer(gRenderer);
-	SDL_DestroyWindow(gWindow);
-	gWindow = NULL;
+	gWindow.free();
 	gRenderer = NULL;
 	gFont = NULL;
 	TTF_Quit();
@@ -95,9 +92,11 @@ void mainLoop() {
 }
 
 void render() {
+	if(gWindow.isMinimised())
+		return;
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	dot.render();
+	gSceneTexture.render((gWindow.getWidth() - gSceneTexture.getWidth()) / 2, (gWindow.getHeight() - gSceneTexture.getHeight()) / 2);
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -108,18 +107,17 @@ void handleEvents() {
 			gQuit = true;
 		else if(e.type == SDL_KEYDOWN)
 			handleKeyboard(e);
-		
+		else
+			gWindow.handleEvent(e);
 	}
 }
 
 void handleKeyboard(SDL_Event e) {
-	/*switch(e.key.keysym.sym) {
-	default:
-		break;
-	}*/
-	dot.handleEvent(e);
+	switch(e.key.keysym.sym) {
+	case SDLK_RETURN:
+		gWindow.isFullscreen() ? gWindow.setFullScreen(false) : gWindow.setFullScreen(true); break;
+	}
 }
 
 void processPhysics() {
-	dot.move();
 }

@@ -6,7 +6,6 @@
 #include <algorithm>
 #include <sstream>
 #include "ltexture.h"
-#include "ltimer.h"
 #include "globals.h"
 #include "dot.h"
 

@@ -21,18 +21,12 @@
     <ClCompile Include="ltexture.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="ltimer.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
     <ClCompile Include="dot.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ltexture.h">
-      <Filter>Заголовочные файлы</Filter>
-    </ClInclude>
-    <ClInclude Include="ltimer.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
     <ClInclude Include="dot.h">

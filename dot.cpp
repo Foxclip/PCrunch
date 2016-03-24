@@ -4,7 +4,7 @@
 Dot::Dot() {
 	mPosX = 100;
 	mPosY = 100;
-	mVelX = 1;
+	mVelX = 0;
 	mVelY = 0;
 }
 

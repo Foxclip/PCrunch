@@ -32,6 +32,10 @@ SDL_Renderer* LWindow::createRenderer() {
 	return SDL_CreateRenderer(mWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 }
 
+SDL_Window* LWindow::getSDLWindow() {
+	return mWindow;
+}
+
 void LWindow::handleEvent(SDL_Event& e) {
 	if(e.type == SDL_WINDOWEVENT) {
 		bool updateCaption = false;
@@ -69,11 +73,6 @@ void LWindow::handleEvent(SDL_Event& e) {
 		case SDL_WINDOWEVENT_RESTORED:
 			mMinimised = false;
 			break;
-		}
-		if(updateCaption) {
-			std::stringstream caption;
-			caption << "MouseFocus:" << (mMouseFocus ? "On" : "Off") << " Keyboard focus:" << (mKeyboardFocus ? "On" : "Off");
-			SDL_SetWindowTitle(mWindow, caption.str().c_str());
 		}
 	}
 }

@@ -8,6 +8,7 @@ public:
 	~LWindow();
 	bool init();
 	SDL_Renderer* createRenderer();
+	SDL_Window* getSDLWindow();
 	void handleEvent(SDL_Event& e);
 	void setFullScreen(bool fullscreen);
 	void free();

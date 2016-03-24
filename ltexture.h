@@ -22,12 +22,15 @@ class LTexture {
 		void render(int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE);
 		int getWidth();
 		int getHeight();
+		bool lockTexture();
+		bool unlockTexture();
+		void* getPixels();
+		int getPitch();
 
 	private:
-		SDL_Renderer** mRenderer;
-		#ifdef _SDL_TTF_H
-		TTF_Font** mFont;
-		#endif
 		SDL_Texture* mTexture;
 		int mWidth, mHeight;
+		void* mPixels;
+		int mPitch;
+
 };

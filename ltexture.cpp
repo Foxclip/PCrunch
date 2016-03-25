@@ -67,6 +67,17 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 }
 #endif //_SDL_TTF_H
 
+bool LTexture::createBlank(int width, int height, SDL_TextureAccess access) {
+	mTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGBA8888, access, width, height);
+	if(mTexture == NULL) {
+		printf("Blank texture error: %s\n", SDL_GetError());
+		return false;
+	}
+	mWidth = width;
+	mHeight = height;
+	return true;
+}
+
 void LTexture::free() {
 	if(mTexture) {
 		SDL_DestroyTexture(mTexture);
@@ -95,6 +106,10 @@ void LTexture::render(int x, int y, SDL_Rect* clip, double angle, SDL_Point* cen
 		renderQuad.h = clip->h;
 	}
 	SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
+}
+
+void LTexture::setAsRenderTarget() {
+	SDL_SetRenderTarget(gRenderer, mTexture);
 }
 
 int LTexture::getWidth() {
@@ -130,6 +145,11 @@ bool LTexture::unlockTexture() {
 
 void* LTexture::getPixels() {
 	return mPixels;
+}
+
+void LTexture::copyPixels(void* pixels) {
+	if(mPixels)
+		memcpy(mPixels, pixels, mPitch * mHeight);
 }
 
 int LTexture::getPitch() {

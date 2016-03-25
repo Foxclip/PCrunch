@@ -22,7 +22,9 @@ bool gQuit = false;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font* gFont;
 LWindow gWindow;
-LTexture gFooTexture;
+LTexture gTargetTexture;
+double angle = 0;
+SDL_Point screenCenter = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 
 int main(int argc, char* args[]) {
 	if(!init()) {
@@ -68,19 +70,8 @@ bool loadMedia() {
 		printf("Font loading error: %s\n", TTF_GetError());
 		return false;
 	}
-	gFooTexture = LTexture();
-	gFooTexture.loadFromFile("foo.png");
-	if(gFooTexture.lockTexture()) {
-		Uint32* pixels = (Uint32*)gFooTexture.getPixels();
-		int pixelCount = (gFooTexture.getPitch() / 4) * gFooTexture.getHeight();
-		Uint32 colorKey = SDL_MapRGB(SDL_GetWindowSurface(gWindow.getSDLWindow())->format, 0, 255, 255);
-		Uint32 transparent = SDL_MapRGBA(SDL_GetWindowSurface(gWindow.getSDLWindow())->format, 255, 255, 255, 0);
-		for(int i = 0; i < pixelCount; i++) {
-			if(pixels[i] == colorKey)
-				pixels[i] = transparent;
-		}
-		gFooTexture.unlockTexture();
-	}
+	gTargetTexture = LTexture();
+	gTargetTexture.createBlank(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_TEXTUREACCESS_TARGET);
 	return true;
 }
 
@@ -107,7 +98,13 @@ void render() {
 		return;
 	SDL_SetRenderDrawColor(gRenderer, 255, 255, 255, 255);
 	SDL_RenderClear(gRenderer);
-	gFooTexture.render((gWindow.getWidth() - gFooTexture.getWidth()) / 2, (gWindow.getHeight() - gFooTexture.getHeight()) / 2);
+	gTargetTexture.setAsRenderTarget();
+	SDL_RenderClear(gRenderer);
+	SDL_Rect rect = { SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
+	SDL_SetRenderDrawColor(gRenderer, 255, 0, 0, 0);
+	SDL_RenderFillRect(gRenderer, &rect);
+	SDL_SetRenderTarget(gRenderer, NULL);
+	gTargetTexture.render(0, 0, NULL, angle, &screenCenter);
 	SDL_RenderPresent(gRenderer);
 }
 
@@ -129,4 +126,7 @@ void handleKeyboard(SDL_Event e) {
 }
 
 void processPhysics() {
+	angle += 2;
+	if(angle > 360)
+		angle = fmod(angle, 360);
 }

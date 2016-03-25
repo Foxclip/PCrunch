@@ -90,7 +90,12 @@ void LWindow::setFullScreen(bool fullscreen) {
 
 
 void LWindow::free() {
-	SDL_DestroyWindow(mWindow);
+	if(mWindow) {
+		SDL_DestroyWindow(mWindow);
+		mWindow = NULL;
+		mWidth = 0;
+		mHeight = 0;
+	}
 }
 
 int LWindow::getWidth() {

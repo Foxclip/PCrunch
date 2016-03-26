@@ -19,7 +19,10 @@ void render();
 void handleEvents();
 void handleKeyboard(SDL_Event e);
 void processPhysics();
-int worker(void* data);
+int producer(void* data);
+int consumer(void* data);
+void produce();
+void consume();
 
 bool gQuit = false;
 SDL_Renderer* gRenderer = NULL;
@@ -29,7 +32,9 @@ LTexture gTargetTexture;
 double angle = 0;
 SDL_Point screenCenter = { SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 };
 SDL_Thread* thread;
-SDL_SpinLock gDataLock;
+SDL_mutex* gBufferLock = NULL;
+SDL_cond* gCanProduce = NULL;
+SDL_cond* gCanConsume = NULL;
 int gData = -1;
 
 int main(int argc, char* args[]) {
@@ -79,12 +84,20 @@ bool loadMedia() {
 	}
 	gTargetTexture = LTexture();
 	gTargetTexture.createBlank(SCREEN_WIDTH, SCREEN_HEIGHT, SDL_TEXTUREACCESS_TARGET);
+	gBufferLock = SDL_CreateMutex();
+	gCanProduce = SDL_CreateCond();
+	gCanConsume = SDL_CreateCond();
 	return true;
 }
 
 void close() {
+	SDL_DestroyMutex(gBufferLock);
+	gBufferLock = NULL;
+	SDL_DestroyCond(gCanProduce);
+	SDL_DestroyCond(gCanConsume);
+	gCanProduce = NULL;
+	gCanConsume = NULL;
 	SDL_DestroyRenderer(gRenderer);
-	gDataLock = NULL;
 	gRenderer = NULL;
 	gFont = NULL;
 	TTF_Quit();
@@ -93,10 +106,9 @@ void close() {
 }
 
 void init() {
-	srand(SDL_GetTicks());
-	SDL_Thread* threadA = SDL_CreateThread(worker, "Thread A", (void*)"Thread A");
-	//SDL_Delay(16 + rand() % 32);
-	SDL_Thread* threadB = SDL_CreateThread(worker, "Thread B", (void*)"Thread B");
+	//srand(SDL_GetTicks());
+	SDL_Thread* producerThread = SDL_CreateThread(producer, "Producer", NULL);
+	SDL_Thread* consumerThread = SDL_CreateThread(consumer, "Consumer", NULL);
 }
 
 void mainLoop() {
@@ -141,22 +153,53 @@ void handleKeyboard(SDL_Event e) {
 }
 
 void processPhysics() {
-	angle += 2;
+	//angle += 2;
 	if(angle > 360)
 		angle = fmod(angle, 360);
 }
 
-int worker(void* data) {
-	printf("%s starting...\n", (char*)data);
+int producer(void* data) {
+	printf("Producer started\n");
+	srand(SDL_GetTicks());
 	for(int i = 0; i < 5; i++) {
-		SDL_Delay(16 + rand() % 32);
-		SDL_AtomicLock(&gDataLock);
-		printf("%s gets %d\n", (char*)data, gData);
-		gData = rand() % 256;
-		printf("%s gets %d\n\n", (char*)data, gData);
-		SDL_AtomicUnlock(&gDataLock);
-		SDL_Delay(16 + rand() % 640);
+		SDL_Delay(rand() % 1000);
+		produce();
 	}
-	printf("%s finished!\n\n", (char*)data);
+	printf("Producer finished\n");
 	return 0;
+}
+
+int consumer(void* data) {
+	printf("Consumer started\n");
+	srand(SDL_GetTicks());
+	for(int i = 0; i < 5; i++) {
+		SDL_Delay(rand() % 1000);
+		consume();
+	}
+	printf("Consumer finished\n");
+	return 0;
+}
+
+void produce() {
+	SDL_LockMutex(gBufferLock);
+	if(gData != -1) {
+		printf("Producer: full buffer\n");
+		SDL_CondWait(gCanProduce, gBufferLock);
+	}
+	gData = rand() % 255;
+	printf("Producer: produced %d\n", gData);
+	SDL_UnlockMutex(gBufferLock);
+	SDL_CondSignal(gCanConsume);
+}
+
+void consume() {
+	SDL_LockMutex(gBufferLock);
+	if(gData == -1) {
+		printf("Consumer: empty buffer\n");
+		SDL_CondWait(gCanConsume, gBufferLock);
+	}
+	printf("Consumer: consumed %d\n", gData);
+	gData = -1;
+	SDL_UnlockMutex(gBufferLock);
+	SDL_CondSignal(gCanProduce);
 }

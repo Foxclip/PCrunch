@@ -1,6 +1,6 @@
 #include "lwindow.h"
-#include <sstream>
 #include "globals.h"
+#include <sstream>
 
 LWindow::LWindow() {
 	mWindow = NULL;
@@ -77,11 +77,17 @@ void LWindow::handleEvent(SDL_Event& e) {
 	}
 }
 
+void LWindow::maximize() {
+	if(!isMinimised()) {
+		SDL_MaximizeWindow(mWindow);
+		mMinimised = false;
+	}
+}
+
 void LWindow::setFullScreen(bool fullscreen) {
 	if(fullscreen) {
 		SDL_SetWindowFullscreen(mWindow, SDL_TRUE);
 		mFullScreen = true;
-		mMinimised = false;
 	} else {
 		SDL_SetWindowFullscreen(mWindow, SDL_FALSE);
 		mFullScreen = false;

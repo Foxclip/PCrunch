@@ -22,7 +22,6 @@ bool LTexture::loadFromFile(std::string path) {
 		printf("Image (%s) loading error: %s\n", path.c_str(), IMG_GetError());	
 		return false;
 	}
-	//SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 255, 255));
 	SDL_Surface* formattedSurface = SDL_ConvertSurface(loadedSurface, SDL_GetWindowSurface(gWindow.getSDLWindow())->format, NULL);
 	if(formattedSurface == NULL) {
 		printf("Surface conversion error: %s\n", SDL_GetError());
@@ -46,7 +45,6 @@ bool LTexture::loadFromFile(std::string path) {
 	return true;
 }
 
-#ifdef _SDL_TTF_H
 bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor) {
 	free();
 	SDL_Surface* textSurface = TTF_RenderText_Solid(gFont, textureText.c_str(), textColor);
@@ -65,7 +63,6 @@ bool LTexture::loadFromRenderedText(std::string textureText, SDL_Color textColor
 	SDL_FreeSurface(textSurface);
 	return true;
 }
-#endif //_SDL_TTF_H
 
 bool LTexture::createBlank(int width, int height, SDL_TextureAccess access) {
 	mTexture = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGBA8888, access, width, height);

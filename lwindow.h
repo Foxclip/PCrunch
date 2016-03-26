@@ -10,6 +10,7 @@ public:
 	SDL_Renderer* createRenderer();
 	SDL_Window* getSDLWindow();
 	void handleEvent(SDL_Event& e);
+	void maximize();
 	void setFullScreen(bool fullscreen);
 	void free();
 	int getWidth();
